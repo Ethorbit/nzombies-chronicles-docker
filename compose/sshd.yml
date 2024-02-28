@@ -6,12 +6,13 @@ services:
     volumes:
       - sftp:/mnt
     command: >
-      /bin/sh -c 'for d in game_servers discord_bots admin_websites; do 
+      /bin/sh -c 'mkdir -p /mnt/openldap
+      && for d in game_servers discord_bots admin_websites; do 
       mkdir -p "/mnt/$$d" 
       chown root:root "/mnt/$$d" 
       chmod 751 "/mnt/$$d"; 
       done
-      && for d in admin_websites/phpmyadmin admin_websites/portainer; do 
+      && for d in admin_websites/phpldapadmin admin_websites/phpmyadmin admin_websites/portainer; do 
       mkdir -p "/mnt/$$d" 
       chmod 750 "/mnt/$$d"; 
       done
@@ -76,6 +77,8 @@ services:
       - ${MOUNT_SYS_DEVICES_SYSTEM_CPU}:/sys/devices/system/cpu:rw
       - ./data/configs/ssh/sshd_config:/etc/ssh/sshd_config
       - sftp:/mnt
+      - openldap_config:/mnt/openldap/config
+      - openldap_data:/mnt/openldap/data
       - svencoop_shared:/mnt/game_servers/svencoop/shared
       - svencoop_1:/mnt/game_servers/svencoop/1
       - svencoop_2:/mnt/game_servers/svencoop/2
@@ -96,8 +99,11 @@ services:
       - nginx_websites:/mnt/websites
       - discord_sticky_bot:/mnt/discord_bots/stickies
       - phpmyadmin:/mnt/admin_websites/phpmyadmin
+      - phpldapadmin:/mnt/admin_websites/phpldapadmin
       - portainer_data:/mnt/admin_websites/portainer
       - discord_sticky_bot_logs:/mnt/logs/discord_sticky_bot
+      - openldap_logs:/mnt/logs/openldap
+      - phpldapadmin_logs:/mnt/logs/phpldapadmin
       - gmod_alpha_logs:/mnt/logs/gmod_alpha
       - gmod_bravo_logs:/mnt/logs/gmod_bravo
       - gmod_charlie_logs:/mnt/logs/gmod_charlie
@@ -189,6 +195,10 @@ networks:
 volumes:
   sshd_logs:
   sftp:
+  openldap_logs:
+  openldap_config:
+  openldap_data:
+  phpldapadmin_logs:
   nginx_logs:
   nginx_websites:
   nginx_fastdl:

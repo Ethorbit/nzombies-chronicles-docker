@@ -34,6 +34,7 @@ x-nginx: &nginx
   env_file:
     - ../.domain.env
   extra_hosts:
+    - "phpldapadmin:172.30.10.2"
     - "searxng:172.50.10.1"
     - "portainer:172.60.10.1"
   healthcheck:
@@ -75,6 +76,7 @@ x-nginx: &nginx
 x-nginx_networks: &nginx_networks
   nginx:
     ipv4_address: 172.10.1.2
+  openldap:
   searxng:
 x-nginx_envsubst_conf: &nginx_envsubst_conf
   build:
@@ -109,11 +111,14 @@ x-nginx_envsubst_snippets: &nginx_envsubst_snippets
   <<: [*labels]
   restart: on-failure
 x-nginx_envsubst_environment: &nginx_envsubst_environment
+  PHPLDAPADMIN_PORT: ${PHPLDAPADMIN_PORT}
+  PORTAINER_PORT: ${PORTAINER_PORT}
   WEBSITES_ROOT: "/mnt/websites"
   FASTDL_ROOT: "/mnt/fastdl"
   PHPMYADMIN_ROOT: "/mnt/admin/phpmyadmin"
   NGINX_PORTAINER_CACHE_PATH: /mnt/cache/portainer
   NGINX_PHPMYADMIN_CACHE_PATH: /mnt/cache/phpmyadmin
+  NGINX_PHPLDAPADMIN_CACHE_PATH: /mnt/cache/phpldapadmin
   NGINX_SEARCH_CACHE_PATH: /mnt/cache/search
   NGINX_SSL_DHPARAM: "/etc/dhparam/dhparam.dh"
 
@@ -187,8 +192,8 @@ services:
       /mnt/nginx_fastdl
       && mkdir -p /mnt/nginx_cache/portainer
       && mkdir -p /mnt/nginx_cache/phpmyadmin
+      && mkdir -p /mnt/nginx_cache/phpldapadmin
       && mkdir -p /mnt/nginx_cache/search
-      && mkdir -p /mnt/admin/portainer
       && chmod 700 -R /mnt/nginx_cache/
       && chown -R ${nginx_u}:${nginx_g} /mnt/nginx_cache/
       && mkdir -p /mnt/nginx_fastdl/gmod_alpha /mnt/nginx_fastdl/gmod_bravo /mnt/nginx_fastdl/gmod_charlie
@@ -236,6 +241,7 @@ services:
       <<: [ *nginx_networks ]
       portainer:
     extra_hosts:
+      - "phpldapadmin:172.30.10.1"
       - "searxng:172.50.10.1"
       - "portainer:172.60.10.1"
     volumes:
@@ -258,6 +264,7 @@ services:
       - nginx_cache:/mnt/cache
       - nginx_websites:/mnt/websites
       - nginx_fastdl:/mnt/fastdl
+      - /dev/null:/mnt/admin/phpldapadmin
       - phpmyadmin:/mnt/admin/phpmyadmin
       - svencoop_shared:/mnt/links/svencoop_shared:ro
       - ./data/configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -312,6 +319,7 @@ services:
       - nginx_cache:/mnt/cache
       - nginx_websites:/mnt/websites
       - nginx_fastdl:/mnt/fastdl
+      - /dev/null:/mnt/admin/phpldapadmin
       - phpmyadmin:/mnt/admin/phpmyadmin
       - svencoop_shared:/mnt/links/svencoop_shared:ro
       - ./data/configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -378,6 +386,7 @@ volumes:
   nginx_websites:
   nginx_fastdl:
   phpmyadmin:
+  phpldapadmin:
   svencoop:
 networks:
   nginx:

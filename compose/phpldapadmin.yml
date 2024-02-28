@@ -1,0 +1,107 @@
+version: "3.9"
+
+# TODO: add phpldapadmin healthcheck
+x-phpldapadmin: &phpldapadmin
+  build:
+    context: ./build/phpldapadmin
+    args:
+      UID: ${phpldapadmin_u}
+      GID: ${php_g}
+  environment:
+    PHPLDAPADMIN_LDAP_HOSTS: ${ADMIN_SUBDOMAIN}
+    PHPLDAPADMIN_HTTPS: false
+    PHPLDAPADMIN_SERVER_ADMIN: ${ADMIN_EMAIL}
+  networks:
+    openldap:
+      ipv4_address: 172.30.10.2
+  volumes:
+    - phpldapadmin:/var/www/phpldapadmin
+    - /etc/localtime:/etc/localtime:ro
+    - /etc/timezone:/etc/timezone:ro
+    - ${MOUNT_PROC_CPUINFO}:/proc/cpuinfo:rw
+    - ${MOUNT_PROC_MEMINFO}:/proc/meminfo:rw
+    - ${MOUNT_PROC_SWAPS}:/proc/swaps:rw
+    - ${MOUNT_PROC_STAT}:/proc/stat:rw
+    - ${MOUNT_PROC_DISKSTATS}:/proc/diskstats:rw
+    - ${MOUNT_PROC_UPTIME}:/proc/uptime:rw
+    - ${MOUNT_PROC_SLABINFO}:/proc/slabinfo:rw
+    - ${MOUNT_SYS_DEVICES_SYSTEM_CPU}:/sys/devices/system/cpu:rw
+  cpuset: ${PHPLDAPADMIN_CPU}
+  cpu_shares: 1024
+  deploy:
+    resources:
+      limits:
+        memory: 512M
+      reservations:
+        memory: 256M
+  logging:
+    driver: syslog
+    options:
+      mode: non-blocking
+      syslog-address: "tcp://localhost:${PHPLDAPADMIN_RSYSLOG_PORT}"
+      tag: "phpldapadmin"
+  restart: always
+x-phpldapadmin-depends: &phpldapadmin_depends
+  openldap:
+    condition: service_healthy
+  phpldapadmin_rsyslog:
+    condition: service_healthy
+      
+services:
+  phpldapadmin_development:
+    profiles:
+      - development
+    <<: [ *phpldapadmin ]
+    depends_on:
+      <<: [ *phpldapadmin_depends ]
+      nginx_development:
+        condition: service_healthy
+  phpldapadmin_production:
+    profiles:
+      - production
+    <<: [ *phpldapadmin ]
+    depends_on:
+      <<: [ *phpldapadmin_depends ]
+      nginx_production:
+        condition: service_healthy
+  phpldapadmin_rsyslog:
+    command: '-n'
+    tty: true
+    stdin_open: true
+    healthcheck:
+      test: "/healthcheck.sh"
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 3
+    restart: always
+    build:
+      context: ./build/rsyslog
+      args:
+        - UID=${rsyslog_u}
+        - GID=${phpldapadmin_g}
+        - PORT=${PHPLDAPADMIN_RSYSLOG_PORT}
+    depends_on:
+      rsyslog_permissions:
+        condition: service_completed_successfully
+    hostname: rsyslog_phpldapadmin
+    ports:
+      - 127.0.0.1:${PHPLDAPADMIN_RSYSLOG_PORT}:${PHPLDAPADMIN_RSYSLOG_PORT}/tcp
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/configs/rsyslog/rsyslog.conf:/etc/rsyslog.conf
+      - ./data/configs/logrotate/rsyslog.conf:/etc/logrotate.d/rsyslog
+      - phpldapadmin_logs:/logs
+      - ${MOUNT_PROC_CPUINFO}:/proc/cpuinfo:rw
+      - ${MOUNT_PROC_MEMINFO}:/proc/meminfo:rw
+      - ${MOUNT_PROC_SWAPS}:/proc/swaps:rw
+      - ${MOUNT_PROC_STAT}:/proc/stat:rw
+      - ${MOUNT_PROC_DISKSTATS}:/proc/diskstats:rw
+      - ${MOUNT_PROC_UPTIME}:/proc/uptime:rw
+      - ${MOUNT_PROC_SLABINFO}:/proc/slabinfo:rw
+      - ${MOUNT_SYS_DEVICES_SYSTEM_CPU}:/sys/devices/system/cpu:rw
+    cpuset: ${PHPLDAPADMIN_CPU}
+volumes:
+  phpldapadmin_logs:
+  phpldapadmin:

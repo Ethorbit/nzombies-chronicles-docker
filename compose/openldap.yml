@@ -1,0 +1,100 @@
+version: "3.9"
+
+services:
+  openldap:
+    build:
+      context: ./build/openldap
+      args:
+        UID: ${admin_u}
+        GID: ${admin_g}
+    environment:
+      LDAP_TLS: false
+      LDAP_ORGANISATION: nZC
+      LDAP_DOMAIN: ${LDAP_BASE_DN}
+      LDAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    networks:
+      openldap:
+        ipv4_address: 172.30.10.1
+    hostname: openldap
+    ports:
+      - 127.0.0.1:${LDAP_UNENCRYPTED_PORT:-389}:389
+      - 127.0.0.1:${LDAP_ENCRYPTED_PORT:-636}:636
+    volumes:
+      - openldap_config:/etc/ldap/slapd.d
+      - openldap_data:/var/lib/ldap
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ${MOUNT_PROC_CPUINFO}:/proc/cpuinfo:rw
+      - ${MOUNT_PROC_MEMINFO}:/proc/meminfo:rw
+      - ${MOUNT_PROC_SWAPS}:/proc/swaps:rw
+      - ${MOUNT_PROC_STAT}:/proc/stat:rw
+      - ${MOUNT_PROC_DISKSTATS}:/proc/diskstats:rw
+      - ${MOUNT_PROC_UPTIME}:/proc/uptime:rw
+      - ${MOUNT_PROC_SLABINFO}:/proc/slabinfo:rw
+      - ${MOUNT_SYS_DEVICES_SYSTEM_CPU}:/sys/devices/system/cpu:rw
+    depends_on:
+      openldap_rsyslog:
+        condition: service_healthy
+    healthcheck:
+      test: "echo 1"
+      #test: ["CMD", "cat", "/run/slapd/slapd.pid"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+      start_period: 5s
+    cpuset: ${OPENLDAP_CPU}
+    logging:
+      driver: syslog
+      options:
+        mode: non-blocking
+        syslog-address: "tcp://localhost:${OPENLDAP_RSYSLOG_PORT}"
+        tag: "openldap"
+    restart: always
+  openldap_rsyslog:
+    command: '-n'
+    tty: true
+    stdin_open: true
+    healthcheck:
+      test: "/healthcheck.sh"
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 3
+    restart: always
+    build:
+      context: ./build/rsyslog
+      args:
+        - UID=${rsyslog_u}
+        - GID=${admin_g}
+        - PORT=${OPENLDAP_RSYSLOG_PORT}
+    depends_on:
+      rsyslog_permissions:
+        condition: service_completed_successfully
+    hostname: rsyslog_openldap
+    ports:
+      - 127.0.0.1:${OPENLDAP_RSYSLOG_PORT}:${OPENLDAP_RSYSLOG_PORT}/tcp
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/configs/rsyslog/rsyslog.conf:/etc/rsyslog.conf
+      - ./data/configs/logrotate/rsyslog.conf:/etc/logrotate.d/rsyslog
+      - openldap_logs:/logs
+      - ${MOUNT_PROC_CPUINFO}:/proc/cpuinfo:rw
+      - ${MOUNT_PROC_MEMINFO}:/proc/meminfo:rw
+      - ${MOUNT_PROC_SWAPS}:/proc/swaps:rw
+      - ${MOUNT_PROC_STAT}:/proc/stat:rw
+      - ${MOUNT_PROC_DISKSTATS}:/proc/diskstats:rw
+      - ${MOUNT_PROC_UPTIME}:/proc/uptime:rw
+      - ${MOUNT_PROC_SLABINFO}:/proc/slabinfo:rw
+      - ${MOUNT_SYS_DEVICES_SYSTEM_CPU}:/sys/devices/system/cpu:rw
+    cpuset: ${OPENLDAP_CPU}
+volumes:
+  openldap_logs:
+  openldap_config:
+  openldap_data:
+networks:
+  openldap:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.10.0/22

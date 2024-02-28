@@ -5,32 +5,34 @@ groups:
     id: 1799
   phpmyadmin:
     id: 1800
-  nginx:
+  phpldapadmin:
     id: 1801
-  steam:
+  nginx:
     id: 1802
-  stickybot:
+  steam:
     id: 1803
-  staff:
+  stickybot:
     id: 1804
-  fastdl:
+  staff:
     id: 1805
-  websites:
+  fastdl:
     id: 1806
-  discord:
+  websites:
     id: 1807
-  rsyslog:
+  discord:
     id: 1808
-  cert:
+  rsyslog:
     id: 1809
-  mysql:
+  cert:
     id: 1810
-  ssh:
+  mysql:
     id: 1811
-  dns:
+  ssh:
     id: 1812
-  fail2ban:
+  dns:
     id: 1813
+  fail2ban:
+    id: 1814
   svencoop:
     id: 1820
   synergy:
@@ -70,6 +72,8 @@ x-admin-defaults: &admin-defaults
     - discord
     - rsyslog
     - php
+    - phpmyadmin
+    - phpldapadmin
     - mysql
     - discord
     - fail2ban
@@ -93,8 +97,12 @@ users:
     id: 1800
     home: false
     primarygroup: phpmyadmin
-  nginx:
+  phpldapadmin:
     id: 1801
+    home: false
+    primarygroup: phpldapadmin
+  nginx:
+    id: 1802
     home: false
     primarygroup: nginx
     groups:
@@ -103,37 +111,39 @@ users:
       - websites
       - svencoop
       - synergy
-      - hl2dm
+      - hl2dm_alpha
+      - hl2dm_bravo
       - gmod_alpha
       - gmod_bravo
       - gmod_charlie
   steam:
-    id: 1802
+    id: 1803
     home: false
     primarygroup: steam
     groups:
+      - svencoop
+      - synergy
+      - hl2dm_alpha
+      - hl2dm_bravo
       - gmod_alpha
       - gmod_bravo
       - gmod_charlie
-      - svencoop
-      - synergy
-      - hl2dm
   stickybot:
-    id: 1803
+    id: 1804
     home: false
     primarygroup: stickybot
     groups:
       - discord
   rsyslog:
-    id: 1804
+    id: 1805
     home: false
     primarygroup: rsyslog
   cert:
-    id: 1805
+    id: 1806
     home: false
     primarygroup: cert
   mysql:
-    id: 1806
+    id: 1807
     home: false
     primarygroup: mysql
   # Custom users below, replace with your own.
