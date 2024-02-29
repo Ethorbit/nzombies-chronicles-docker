@@ -1,0 +1,13 @@
+dn: uid=test,dc=nzc
+uid: test
+sn: User
+cn: Test User
+objectClass: person
+objectClass: organizationalPerson
+objectClass: posixAccount
+objectClass: top
+uidNumber: 1059
+gidNumber: 1059
+loginShell: /bin/bash
+homeDirectory: /home/test
+userPassword: test

@@ -23,6 +23,7 @@ services:
     volumes:
       - openldap_config:/etc/ldap/slapd.d
       - openldap_data:/var/lib/ldap
+      - ./data/configs/openldap/ldif/posix.ldif:/container/service/slapd/assets/config/bootstrap/ldif/10-posix.ldif
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - ${MOUNT_PROC_CPUINFO}:/proc/cpuinfo:rw
