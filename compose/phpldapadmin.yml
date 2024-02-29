@@ -8,12 +8,14 @@ x-phpldapadmin: &phpldapadmin
       UID: ${phpldapadmin_u}
       GID: ${php_g}
   environment:
-    PHPLDAPADMIN_LDAP_HOSTS: ${ADMIN_SUBDOMAIN}
+    PHPLDAPADMIN_LDAP_HOSTS: openldap
     PHPLDAPADMIN_HTTPS: false
     PHPLDAPADMIN_SERVER_ADMIN: ${ADMIN_EMAIL}
   networks:
     openldap:
       ipv4_address: 172.30.10.2
+  extra_hosts:
+    - "openldap:172.30.10.1"
   volumes:
     - phpldapadmin:/var/www/phpldapadmin
     - /etc/localtime:/etc/localtime:ro

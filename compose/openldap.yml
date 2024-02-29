@@ -10,7 +10,8 @@ services:
     environment:
       LDAP_TLS: false
       LDAP_ORGANISATION: nZC
-      LDAP_DOMAIN: ${LDAP_BASE_DN}
+      LDAP_DOMAIN: nzc
+      LDAP_BASE_DN: cn=admin,dc=nzc
       LDAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     networks:
       openldap:
